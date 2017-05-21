@@ -27,6 +27,9 @@
 *.out
 *.app
 
+*test_data.txt
+*train_data.txt
+
 # =========================
 # Operating System Files
 # =========================
