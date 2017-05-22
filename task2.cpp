@@ -27,7 +27,7 @@ struct Node {
 	int left;// 0
 	int right;// 1
 
-	Node(): left(-1), right(-1);
+	Node(): left(-1), right(-1) {}
 };
 
 list<Record> training_set(training_size);
@@ -40,7 +40,7 @@ clock_t start() {
 
 int stop(clock_t start) {
 	clock_t finish = clock();
-	return (finish - start) / CLOCK_PER_SEC;
+	return (finish - start) / CLOCKS_PER_SEC;
 }
 
 void read(string path, int size, list<Record> &set) {
@@ -69,34 +69,34 @@ void read(string path, int size, list<Record> &set) {
 	file.close();
 }
 
-inline vector<int> randomFeatures(int count) {
-	vector<int> feature_indices(count);
-	for (int i = 0; i < count; ++i) feature_index[i] = rand() % dim;
-	return feature_indices;
-}
+// inline vector<int> randomFeatures(int count) {
+// 	vector<int> feature_indices(count);
+// 	for (int i = 0; i < count; ++i) feature_index[i] = rand() % dim;
+// 	return feature_indices;
+// }
 
-double spilt(int index, bool &flag);
+// double spilt(int index, bool &flag);
 
-vector<Node> training(int count) {
-	vector<int> indices = randomFeatures(count);
-	vector<Node> tree(count);
-	bool flag;
-	for (int i = 0; i < count; ++i) {
-		tree[i].index = randomFeatures[i];
-		tree[i].value = spilt(randomFeatures[i], flag);
-		if (flag) tree[i].left = i + 1;
-		else tree[i].right = i + 1;
-	}
-	tree[i].left = tree[i].right = -1;
-}
+// vector<Node> training(int count) {
+// 	vector<int> indices = randomFeatures(count);
+// 	vector<Node> tree(count);
+// 	bool flag;
+// 	for (int i = 0; i < count; ++i) {
+// 		tree[i].index = randomFeatures[i];
+// 		tree[i].value = spilt(randomFeatures[i], flag);
+// 		if (flag) tree[i].left = i + 1;
+// 		else tree[i].right = i + 1;
+// 	}
+// 	tree[i].left = tree[i].right = -1;
+// }
 
 int main() {
 	srand(time(NULL));
 	
-	start();
+	clock_t t = start();
     read("train_data.txt", training_size, training_set);
-    cout << "read training set: " << stop() << "s" << endl;
+    cout << "read training set: " << stop(t) << "s" << endl;
 
-    read("test_data.txt", testing_size, testing_set);
+    // read("test_data.txt", testing_size, testing_set);
     return 0;
 }
