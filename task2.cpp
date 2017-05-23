@@ -9,30 +9,33 @@
 
 using namespace std;
 
-const int dim = 201;
-const int training_size = 1866819;
-const int testing_size = 282796;
-const int feature_count = 20;
+const int FEATURE_COUNT = 201;
+const int TRAINING_SET_SIZE = 1866819;
+const int TESTING_SET_SIZE = 282796;
+const int SELECTED_COUNT = 12;
+const int MAX_NODE_COUNT = 4096;  //  2^12
 
 struct Record {
 	vector<double> features;
 	double label;
 
-	Record():features(vector<double>(dim, 0)), label(0) {}
+	Record():features(vector<double>(FEATURE_COUNT, 0)), label(0) {}
 };
+
+
 
 struct Node {
 	int index;
 	double value;// test value < value
+	int label;
 	int left;// 0
 	int right;// 1
+	bool good;
 
-	Node(): left(-1), right(-1) {}
+	Node(): left(-1), right(-1), label(-1), good(false) {}
 };
 
-list<Record> training_set(training_size);
-list<Record> used;
-list<Record> testing_set(testing_size);
+list<Record> data_set(TRAINING_SET_SIZE);
 
 clock_t start() {
 	return clock();
@@ -60,7 +63,7 @@ void read(string path, int size, list<Record> &set) {
 
 		///////// debug
 		// cout << it->label << " ";
-		// for (int i = 0; i < dim; ++i) cout << i + 1 << ":" << it->features[i] << " ";
+		// for (int i = 0; i < FEATURE_COUNT; ++i) cout << i + 1 << ":" << it->features[i] << " ";
 		// cout << endl;
 		/////////////////
 
@@ -69,34 +72,46 @@ void read(string path, int size, list<Record> &set) {
 	file.close();
 }
 
-// inline vector<int> randomFeatures(int count) {
-// 	vector<int> feature_indices(count);
-// 	for (int i = 0; i < count; ++i) feature_index[i] = rand() % dim;
-// 	return feature_indices;
-// }
+int judge(int zero, int one) {
+	// 1 --> true
+	// 0 --> false
+	// -1 --> unknown
+	int sum = zero + one;
+	if (zero * 1.0 / sum >= 0.75) return 0;
+	else if (one * 1.0 / sum >= 0.75) return 1;
+	else return -1;
+}
 
-// double spilt(int index, bool &flag);
+double spilt(vector<Node> &tree, int node_index) {
+	return 0.0;
+}
 
-// vector<Node> training(int count) {
-// 	vector<int> indices = randomFeatures(count);
-// 	vector<Node> tree(count);
-// 	bool flag;
-// 	for (int i = 0; i < count; ++i) {
-// 		tree[i].index = randomFeatures[i];
-// 		tree[i].value = spilt(randomFeatures[i], flag);
-// 		if (flag) tree[i].left = i + 1;
-// 		else tree[i].right = i + 1;
-// 	}
-// 	tree[i].left = tree[i].right = -1;
-// }
+vector<Node> training() {
+	int label;
+	int counter = 0;
+	vector<Node> tree(MAX_NODE_COUNT);
+	for (int i = 0; i < MAX_NODE_COUNT && counter < SELECTED_COUNT; ++i) {
+		if ((i - 1) / 2 >= 0 && tree[(i - 1) / 2].good) continue;
+		//  select a feature
+		tree[i].index = rand() % FEATURE_COUNT;
+		tree[i].value = spilt(tree, i);
+		int son = 2 * i + 1;
+		if (son < MAX_NODE_COUNT && son + 1 < MAX_NODE_COUNT) {
+			tree[i].left = son;
+			tree[i].right = son + 1;
+		}
+		counter++;
+	}
+	return tree;
+}
 
 int main() {
 	srand(time(NULL));
 	
 	clock_t t = start();
-    read("train_data.txt", training_size, training_set);
+    read("train_data.txt", TRAINING_SET_SIZE, data_set);
     cout << "read training set: " << stop(t) << "s" << endl;
 
-    // read("test_data.txt", testing_size, testing_set);
+    // read("test_data.txt", TESTING_SET_SIZE, data_set);
     return 0;
 }
