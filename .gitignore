@@ -80,3 +80,11 @@ $RECYCLE.BIN/
 
 # Windows shortcuts
 *.lnk
+
+
+###################
+/*
+!task.cpp
+!decisionTree.h
+!.gitignore
+!.gitattributes
