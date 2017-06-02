@@ -22,7 +22,11 @@ struct DecisionTree {
 	/*test*/
 	static const int TRAINING_SET_SIZE = 1000;
 
-	static const int TESTING_SET_SIZE = 282796;
+	// static const int TESTING_SET_SIZE = 282796;
+
+	/*test*/
+	static const int TESTING_SET_SIZE = 5000;
+
 	static const int SELECTED_COUNT = 12;//   select 12 random features
 	static const int MAX_NODE_COUNT = 4096;// max tree size
 	static const double OK_RATIO = 0.9;
@@ -101,7 +105,7 @@ struct DecisionTree {
 		double total = n + p;
 		double npro = n / total;
 		double ppro = p / total;
-		
+
 		return -(npro * log(npro) + ppro * log(ppro));
 	}
 
@@ -211,7 +215,7 @@ struct DecisionTree {
 			if (p[i].entropy < pp.entropy) pp = p[i];
 		}
 
-		// cout << "best feature: " << pp.feature_index << ", threshold: " << pp.value << endl;
+		 // cout << "best feature: " << pp.feature_index << ", threshold: " << pp.value << endl;
 
 		return pp;
 	}
@@ -258,16 +262,26 @@ struct DecisionTree {
 		if (greater_false || greater_true)
 			right_ratio = greater_false * 1.0 / (greater_false + greater_true);// the proportion of label 0
 
-		tree[root].left = next;
-		if (left_ratio < 1 - OK_RATIO) tree[next].label = 1;
-		else if (left_ratio > OK_RATIO) tree[next].label = 0;
-		next++;
+		if (next < MAX_NODE_COUNT) {
+			tree[root].left = next;
+			if (left_ratio < 1 - OK_RATIO) tree[next].label = 1;
+			else if (left_ratio > OK_RATIO) tree[next].label = 0;
+			next++;
+		} else {
+			if (left_ratio < 0.5) tree[root].label = 1;
+			else tree[root].label = 0;
+		}
 
-		tree[root].right = next;
-		if (right_ratio < 1 - OK_RATIO) tree[next].label = 1;
-		else if (right_ratio > OK_RATIO) tree[next].label = 0;
-		next++;
-		
+		if (next < MAX_NODE_COUNT) {
+			tree[root].right = next;
+			if (right_ratio < 1 - OK_RATIO) tree[next].label = 1;
+			else if (right_ratio > OK_RATIO) tree[next].label = 0;
+			next++;
+		} else {
+			if (right_ratio < 0.5) tree[root].label = 1;
+			else tree[root].label = 0;
+		}
+
 		cout << "left: " << left_ratio << " right: " << right_ratio << endl << endl;
 
 		return right_side;
@@ -279,10 +293,16 @@ struct DecisionTree {
 
 		for (int i = 0; i < data_set.size(); ++i) {
 			int ptr = 0;
-			while (tree[ptr].label == -1) {
+			while (ptr < MAX_NODE_COUNT && tree[ptr].label == -1) {
 				Node node = tree[ptr];
-				if (data_set[i].features[node.feature_index] < node.value) ptr = node.left;
-				else ptr = node.right;
+				if (data_set[i].features[node.feature_index] < node.value) {
+					if (node.left == -1) break;
+					ptr = node.left;
+				}
+				else {
+					if (node.right == -1) break;
+					ptr = node.right;
+				}
 			}
 			result << i << "," << tree[ptr].label << endl;
 		}
