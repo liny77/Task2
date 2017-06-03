@@ -1,6 +1,3 @@
-#ifndef DECISION_TREE
-#define DECISION_TREE
-
 #include <iostream>
 #include <vector>
 #include <list>
@@ -29,7 +26,7 @@ struct DecisionTree {
 
 	static const int SELECTED_COUNT = 12;//   select 12 random features
 	static const int MAX_NODE_COUNT = 4096;// max tree size
-	static const double OK_RATIO = 0.9;
+	static const double OK_RATIO = 0.80;
 
 	struct Record {
 		vector<double> features;
@@ -266,23 +263,24 @@ struct DecisionTree {
 			tree[root].left = next;
 			if (left_ratio < 1 - OK_RATIO) tree[next].label = 1;
 			else if (left_ratio > OK_RATIO) tree[next].label = 0;
-			next++;
 		} else {
-			if (left_ratio < 0.5) tree[root].label = 1;
+			double total = less_false + less_true + greater_false + greater_true;
+			double node_ratio = (less_false + greater_false) / total;
+			if (node_ratio < 0.5) tree[root].label = 1;
 			else tree[root].label = 0;
 		}
+		next++;
+
 
 		if (next < MAX_NODE_COUNT) {
 			tree[root].right = next;
 			if (right_ratio < 1 - OK_RATIO) tree[next].label = 1;
 			else if (right_ratio > OK_RATIO) tree[next].label = 0;
-			next++;
-		} else {
-			if (right_ratio < 0.5) tree[root].label = 1;
-			else tree[root].label = 0;
 		}
+		next++;
 
-		cout << "left: " << left_ratio << " right: " << right_ratio << endl << endl;
+
+		cout << "left: " << left_ratio << " right: " << right_ratio << endl;
 
 		return right_side;
 	}
@@ -322,4 +320,44 @@ struct DecisionTree {
 	}
 };
 
-#endif
+clock_t start() {
+    return clock();
+}
+
+int stop(clock_t start) {
+    clock_t finish = clock();
+    return (double) (finish - start) / CLOCKS_PER_SEC;
+}
+
+int main() {
+	srand(time(NULL));
+	clock_t t;
+
+    DecisionTree tree;
+
+	t = start();
+	cout << "reading training set...\n";
+    tree.readTrainData("train_data.txt");
+    cout << stop(t) << "s" << endl << endl;
+
+	t = start();
+	cout << "training...\n";
+    tree.training();
+    cout << stop(t) << "s" << endl << endl;
+
+    tree.print();
+
+    t = start();
+    cout << "reading testing set...\n";
+    tree.readTestData("test_data.txt");
+    cout << stop(t) << "s" << endl << endl;
+
+    t = start();
+    cout << "classifying...\n";
+    tree.classify();
+    cout << stop(t) << "s" << endl << endl;
+
+//	system("pause");
+    return 0;
+}
+

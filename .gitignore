@@ -84,7 +84,6 @@ $RECYCLE.BIN/
 
 ###################
 /*
-!task.cpp
-!decisionTree.h
+!decisionTree.cpp
 !.gitignore
 !.gitattributes
