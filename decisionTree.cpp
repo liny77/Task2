@@ -16,7 +16,7 @@ using namespace std;
 const int FEATURE_COUNT = 201;
 const int TESTING_SET_SIZE = 282796;
 const int TRAINING_SET_SIZE = 1866819;
-const int USED_SIZE = 100000;
+const int USED_SIZE = 10000;
 
 const double OK_RATIO = 0.80;
 
@@ -307,7 +307,9 @@ int stop(clock_t start) {
 
 void growingForest(vector<DecisionTree> &forest) {
     for (int i = 0; i < forest.size(); ++i) {
+        cout << "tree " << i;
         forest[i].training(USED_SIZE);
+        cout << "......done" << endl;
     }
 }
 
@@ -363,17 +365,17 @@ int main() {
     growingForest(forest);
     cout << stop(t) << "s" << endl << endl;
 
-    // t = start();
-    // cout << "reading testing set...\n";
-    // read("data/test_data.txt", TESTING_SET_SIZE);
-    // cout << stop(t) << "s" << endl << endl;
+    t = start();
+    cout << "reading testing set...\n";
+    read("data/test_data.txt", TESTING_SET_SIZE);
+    cout << stop(t) << "s" << endl << endl;
 
     t = start();
     cout << "classifying...\n";
     classifyingData(forest, votes);
     cout << stop(t) << "s" << endl << endl;
 
-    cout << assess(votes) << endl;
+    // cout << assess(votes) << endl;
 
     return 0;
 }
