@@ -88,3 +88,5 @@ $RECYCLE.BIN/
 !.gitignore
 !.gitattributes
 !README.md
+!/result
+!/data/*txt

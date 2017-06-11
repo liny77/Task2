@@ -10,15 +10,17 @@
 #include <sstream>
 #include <set>
 #include <random>
+#include <iomanip>
+#include <thread>
 
 using namespace std;
 
 const int FEATURE_COUNT = 201;
 const int TESTING_SET_SIZE = 282796;
 const int TRAINING_SET_SIZE = 1866819;
-const int USED_SIZE = 10000;
+const int USED_SIZE = 50000;
 
-const double OK_RATIO = 0.80;
+const double OK_RATIO = 0.85;
 
 const int FOREST_SIZE = 32;
 
@@ -118,7 +120,7 @@ struct DecisionTree {
         return v;
     }
 
-    void training(int dataCount) {
+    void training(int dataCount, int i) {
         tree.resize(MAX_NODE_COUNT);
         next = 1;
         // construct data indices
@@ -127,6 +129,7 @@ struct DecisionTree {
             indices.push_back(rd() % TRAINING_SET_SIZE);
         }
         build(0, indices);
+        cout << "tree " << i << "......done" << endl;
     }
 
     void build(int root, list<int> data_indices) {
@@ -306,28 +309,34 @@ int stop(clock_t start) {
 }
 
 void growingForest(vector<DecisionTree> &forest) {
+     thread *t = new thread[FOREST_SIZE];
+
     for (int i = 0; i < forest.size(); ++i) {
-        cout << "tree " << i;
-        forest[i].training(USED_SIZE);
-        cout << "......done" << endl;
+        // forest[i].training(USED_SIZE, i);
+        t[i] = thread(&DecisionTree::training, &forest[i], USED_SIZE, i);
     }
+
+    for (int i = 0; i < forest.size(); ++i) {
+        t[i].join();
+    }
+
+    delete []t;
 }
 
 void classifyingData(vector<DecisionTree> &forest, vector<Vote> &votes) {
     for (int i = 0; i < forest.size(); ++i) {
         forest[i].classify(votes);
+        cout << "tree " << i << ".....ok" << endl;
     }
+    stringstream ss;
+    ss << "result/" << USED_SIZE << "-" << OK_RATIO << ".txt";
+    string filename = ss.str();
 
-    fstream file("result/result.txt", fstream::out);
+    fstream file(filename.c_str(), fstream::out);
     fstream debug("vote.txt", fstream::out);
     file << "id,label" << endl;
     for (int i = 0; i < votes.size(); ++i) {
-        file << i << ",";
-        if (votes[i].negtive_count < votes[i].positive_count) {
-            file << 1 << endl;
-        } else {
-            file << 0 << endl;
-        }
+        file << i << "," << setprecision(15) << votes[i].positive_count * 1.0 / FOREST_SIZE << endl;
 
         debug << i << " " << votes[i]. negtive_count << " "
             << votes[i].positive_count << endl;
