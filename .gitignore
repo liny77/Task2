@@ -1,7 +1,2 @@
-/*
-!/data/*
-!result
-!.git*
-!decisionTree.cpp
-!README.md
-!vote.txt
+*out
+/data/*
