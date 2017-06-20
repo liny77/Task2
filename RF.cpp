@@ -83,9 +83,9 @@ void read(string path, int size) {
 random_device rd;
 
 struct DecisionTree {
-    static const int SELECTED_COUNT = 14;//   select 14 random features   
-    static const int MAX_NODE_COUNT = 64;// max tree size
-    static const int level = 6;
+    static const int SELECTED_COUNT = 40;   
+    static const int level = 10;
+    static const int MAX_NODE_COUNT = 1024;// max tree size
 
     struct Triple {
         double value;
@@ -140,13 +140,13 @@ struct DecisionTree {
     }
 
     void build(int root, set<int> data, int l) {
-        if (next < MAX_NODE_COUNT && root != -1 && tree[root].label == -1 && l < level) {
+        if (!data.empty() && root != -1 && tree[root].label == -1 && l < level) {
             set<int> rand_features = getRandomFeatures();
             Triple best_feature_info = findBestFeature(data, rand_features);
             set<int> right_side = spilt(root, data, best_feature_info, l);//  spilt the data and add new nodes
             l++;
-            if (!data.empty()) build(tree[root].left, data, l);
-            if (!right_side.empty()) build(tree[root].right, right_side, l);
+            build(tree[root].left, data, l);
+            build(tree[root].right, right_side, l);
         }
     }
 
@@ -247,23 +247,23 @@ struct DecisionTree {
         if (greater_false || greater_true)
             right_ratio = greater_false * 1.0 / (greater_false + greater_true);// the proportion of label 0
 
-        if (l < level - 1) {
-            tree[root].left = next;
-            if (left_ratio < 1 - OK_RATIO) tree[next].label = 1;
-            else if (left_ratio > OK_RATIO) tree[next].label = 0;
-            next++;
-
-            tree[root].right = next;
-            if (right_ratio < 1 - OK_RATIO) tree[next].label = 1;
-            else if (right_ratio > OK_RATIO) tree[next].label = 0;
-            next++;
-        } else if (l == level - 1) {
+        if (l == level - 1) {
             double total = less_false + less_true + greater_false + greater_true;
-            double node_ratio = (less_false + greater_false) / total;
+            double node_ratio = (less_false + greater_false) * 1.0 / total;
             if (node_ratio < 0.5) tree[root].label = 1;
             else if (node_ratio > 0.5) tree[root].label = 0;
             else tree[root].label = rd() % 2;
-        } 
+        } else {
+            tree[root].left = next;
+            if (left_ratio == 1) tree[next].label = 0;
+            else if (left_ratio == 0) tree[next].label = 1;
+            next++;
+
+            tree[root].right = next;
+            if (right_ratio == 1) tree[next].label = 0;
+            else if (right_ratio == 0) tree[next].label = 1;
+            next++;
+        }
 
         // cout << "left: " << left_ratio << " right: " << right_ratio << " " << next << endl << endl;
 
@@ -306,6 +306,16 @@ int stop(steady_clock::time_point start) {
     return span.count();
 }
 
+void printTree(DecisionTree &dt) {
+    fstream file("tree.txt", fstream::out);
+    for (int i = 0; i < dt.tree.size(); ++i) {
+        file << i << " " << dt.tree[i].feature_index << " "
+            << dt.tree[i].value << " " << dt.tree[i].label << " "
+            << dt.tree[i].left << " " << dt.tree[i].right << endl;
+    }
+    file.close();
+}
+
 void growingForest(vector<DecisionTree> &forest) {
     thread *t = new thread[FOREST_SIZE];
 
@@ -321,21 +331,6 @@ void growingForest(vector<DecisionTree> &forest) {
     delete []t;
 }
 
-    int feature_index;
-    double value;//  threshold
-    int label;
-    int left;//  false 
-    int right;//  true
-
-void printTree(DecisionTree &dt) {
-    fstream file("tree.txt", fstream::out);
-    for (int i = 0; i < dt.tree.size(); ++i) {
-        file << i << " " << dt.tree[i].feature_index << " "
-            << dt.tree[i].value << " " << dt.tree[i].label << " "
-            << dt.tree[i].left << " " << dt.tree[i].right << endl;
-    }
-    file.close();
-}
 
 void classifyingData(vector<DecisionTree> &forest, vector<Vote> &votes) {
     printTree(forest[0]);
@@ -351,18 +346,15 @@ void classifyingData(vector<DecisionTree> &forest, vector<Vote> &votes) {
 
     fstream debug("vote.txt", fstream::out);
     file << "id,label" << endl;
-    int bad = 0;
     for (int i = 0; i < votes.size(); ++i) {
         file << i << "," << setprecision(15) << votes[i].positive_count * 1.0 / FOREST_SIZE << endl;
-        if (votes[i].positive_count >= FOREST_SIZE / 2 && votes[i].positive_count <= FOREST_SIZE / 2 + 4) bad++;
-        if (votes[i].negtive_count >= FOREST_SIZE / 2 && votes[i].negtive_count <= FOREST_SIZE / 2 + 4) bad++;
 
         debug << i << " " << votes[i]. negtive_count << " "
             << votes[i].positive_count << endl;
     }
     file.close();
     debug.close();
-    cout << "bad " << bad * 1.0 / TESTING_SET_SIZE  << endl; 
+
 }
 
 void validation(vector<DecisionTree> &forest) {
