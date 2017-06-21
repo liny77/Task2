@@ -19,7 +19,6 @@ const int FEATURE_COUNT = 201;
 const int TESTING_SET_SIZE = 282796;
 const int TRAINING_SET_SIZE = 1866819;
 const int USED_FOR_TRAINING = 10000;
-const double OK_RATIO = 1;
 const int FOREST_SIZE = 128;
 
 struct Record {
@@ -83,9 +82,9 @@ void read(string path, int size) {
 random_device rd;
 
 struct DecisionTree {
-    static const int SELECTED_COUNT = 40;   
-    static const int level = 10;
-    static const int MAX_NODE_COUNT = 1024;// max tree size
+    static const int SELECTED_COUNT = 30;   
+    static const int level = 8;
+    static const int MAX_NODE_COUNT = 256;// max tree size
 
     struct Triple {
         double value;
@@ -339,7 +338,7 @@ void classifyingData(vector<DecisionTree> &forest, vector<Vote> &votes) {
         cout << "tree " << i << ".....ok" << endl;
     }
     stringstream ss;
-    ss << "result/" << USED_FOR_TRAINING << "-" << OK_RATIO << "-" << FOREST_SIZE << ".txt";
+    ss << "result/" << USED_FOR_TRAINING << "-" << DecisionTree::level << "-" << FOREST_SIZE << ".txt";
     string filename = ss.str();
 
     fstream file(filename.c_str(), fstream::out);
